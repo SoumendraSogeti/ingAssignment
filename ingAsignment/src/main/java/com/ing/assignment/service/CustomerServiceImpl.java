@@ -63,29 +63,24 @@ public class CustomerServiceImpl implements CustomerService {
         List<UserAgreementEntity> userAgreementEntityList ;
         try{
             userAgreementEntityList = userAgreementRepository.findAgreementByUser(user);
-            log.info("userAgreementEntityList {}",userAgreementEntityList.size());
-            log.info("userAgreementEntityList 1 {}",userAgreementEntityList.get(0).getAgreementAccount());
-            log.info("userAgreementEntityList 2 {}",userAgreementEntityList.get(1).getAgreementAccount());
         }catch (Exception exception){
             log.error("No data found for the user {}",user);
             throw new EntityNotFoundException();
         }
         AgreementOverview agreementOverview = new AgreementOverview();
         agreementOverview.setUser(Integer.toString(user));
+        agreementOverview.setAgreements(toAgreementDomain(userAgreementEntityList));
         for(UserAgreementEntity userAgreementEntity1 : userAgreementEntityList){
             List<String> accountList = new ArrayList<>();
             List<DebitCard> debitCardList = new ArrayList<>();
             String accountId = userAgreementEntity1.getAgreementType()+ userAgreementEntity1.getAgreementAccount();
-            log.info("accountId 1 {}",accountId);
             AccountsEntity accountsEntity = accountsRepository.findById(accountId.trim()).orElseThrow(EntityNotFoundException::new);
             Account account = AccountMapper.toAccountDomain(accountsEntity);
             accountList.add(account.getAccount());
             List<DebitCardsEntity> debitCardEntities = accountsEntity.getDebitCardEntities();
-            log.info("debitCardEntities 1 {}",debitCardEntities.size());
             for(DebitCardsEntity debitCardsEntity : debitCardEntities){
                 DebitCardsEntity cardsEntity;
                 try{
-                    log.info("debitCardsEntity.getCardNumber 1 {}",debitCardsEntity.getCardNumber());
                      cardsEntity = debitCardsRepository.findDebitCardByCardNumber(debitCardsEntity.getCardNumber());
                 }catch (Exception exception){
                     log.error("No data found for the card number {}",debitCardsEntity.getCardNumber());
@@ -97,6 +92,7 @@ public class CustomerServiceImpl implements CustomerService {
                 }
             }
             agreementOverview.setAccountNumbers(accountList);
+
             agreementOverview.setDebitCards(account.getDebitCards());
             agreementOverview.setDebitCard(debitCardList);
 
